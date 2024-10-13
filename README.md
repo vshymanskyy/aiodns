@@ -18,9 +18,15 @@ A small async DNS client for MicroPython
 
 ## Install
 
+Using CLI:
+
 ```sh
 mpremote mip install github:vshymanskyy/aiodns
 ```
+
+Using [ViperIDE](https://viper-ide.org):
+
+Connect your board -> Open <kbd>🛠 Tools</kbd> -> Click <kbd>📦 Install package via link</kbd> -> Enter URL: `github:vshymanskyy/aiodns`
 
 ## Example
 
