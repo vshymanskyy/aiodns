@@ -10,7 +10,7 @@
 
 A small async DNS client for MicroPython
 
-- Works on `ESP32`, `Raspberry Pi Pico W`, `WM W600` and other boards
+- Works on `ESP32`, `ESP8266`, `Raspberry Pi Pico W`, `WM W600` and other boards
 - Versatile, runs multiple queries at a time using multiple DNS servers
 - Supports IPv4 and IPv6
 - Caches up to 32 hostnames (configurable)
@@ -26,11 +26,20 @@ mpremote mip install github:vshymanskyy/aiodns
 
 Using [ViperIDE](https://viper-ide.org):
 
-Connect your board -> Open <kbd>🛠 Tools</kbd> -> Click <kbd>📦 Install package via link</kbd> -> Enter URL: `github:vshymanskyy/aiodns`
+Open <kbd>🛠 Tools</kbd> -> Click <kbd>📦 Install package via link</kbd> -> Enter URL: `github:vshymanskyy/aiodns`
+
+Using REPL (your board must be connected to the internet):
+
+```py
+import mip
+mip.install("github:vshymanskyy/aiodns")
+```
 
 ## Example
 
 ```py
-info = await getaddrinfo("google.com", 443)
+import aiodns
+# Connect your board to any network
+info = await aiodns.getaddrinfo("google.com", 443)
 print(info)
 ```
