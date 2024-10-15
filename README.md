@@ -20,7 +20,7 @@ A small async DNS client for MicroPython
 
 Using ViperIDE:
 
-[<kbd>📦 Install aiodns</kbd>](https://viper-ide.org/?import=github:vshymanskyy/aiodns)
+[<kbd>📦 Install aiodns</kbd>](https://viper-ide.org/?install=github:vshymanskyy/aiodns)
 
 Using CLI:
 
