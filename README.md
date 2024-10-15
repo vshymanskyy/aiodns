@@ -24,11 +24,9 @@ Using CLI:
 mpremote mip install github:vshymanskyy/aiodns
 ```
 
-Using [ViperIDE](https://viper-ide.org):
+Using ViperIDE:
 
-1. Open <kbd>🛠 Tools</kbd>
-2. Click <kbd>📦 Install package via link</kbd>
-3. Enter URL: `github:vshymanskyy/aiodns`
+[<kbd>📦 Install aiodns</kbd>](https://viper-ide.org/?import=github:vshymanskyy/aiodns)
 
 Using REPL (your board must be connected to the internet):
 
