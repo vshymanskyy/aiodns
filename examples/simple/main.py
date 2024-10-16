@@ -20,11 +20,10 @@ async def connect_sta():
     aiodns.add_server(sta_if.ifconfig()[3])
 
 
-async def run_example():
+async def run_example(hostname):
     await connect_sta()
-    info = await aiodns.getaddrinfo("google.com", 443)
-    print(info)
-
+    print("IPv4:", await aiodns.getaddrinfo(hostname, 443, aiodns.AF_INET))
+    print("IPv6:", await aiodns.getaddrinfo(hostname, 443, aiodns.AF_INET6))
 
 if __name__ == "__main__":
-    asyncio.run(run_example())
+    asyncio.run(run_example("google.com"))
