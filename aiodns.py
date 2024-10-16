@@ -9,7 +9,7 @@ __license__ = "MIT"
 __version__ = "0.1.1"
 
 import time
-import random
+import os
 from socket import socket, AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM
 from collections import OrderedDict
 from asyncio import sleep_ms
@@ -33,7 +33,7 @@ _qtypes = {
 def _build_dns_query(hostname, qtype):
     hostname = hostname.encode()
     query = bytearray(17 + len(hostname))  # Header + Hostname + NULL + (Questions * 4)
-    query[0:2] = random.getrandbits(16).to_bytes(2)  # Transaction ID
+    query[0:2] = os.urandom(2)  # Transaction ID
     query[2:4] = b"\x01\x00"  # Standard query with recursion desired
     query[4:6] = b"\x00\x01"  # Questions count = 1
     # query[6:12] => Answer RRs, Authority RRs, Additional RRs (all set to 0)
