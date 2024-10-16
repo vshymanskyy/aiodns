@@ -42,3 +42,13 @@ import aiodns
 info = await aiodns.getaddrinfo("google.com", 443)
 print(info)
 ```
+
+## API
+
+```py
+set_servers(["8.8.8.8", "1.1.1.1"])
+add_server("9.9.9.9")
+set_timeout_ms(5000)
+clear_cache()
+async getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0)
+```
