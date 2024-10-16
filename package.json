@@ -1,4 +1,10 @@
 {
+  "name": "aiodns",
   "version": "0.1",
-  "urls": [["aiodns.mpy", "github:vshymanskyy/aiodns/aiodns.mpy"]]
+  "description": "A small async DNS client for MicroPython",
+  "author": "Volodymyr Shymanskyy",
+  "license": "MIT",
+  "urls": [
+    ["aiodns.py", "github:vshymanskyy/aiodns/aiodns.py"]
+  ]
 }
