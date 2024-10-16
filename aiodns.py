@@ -6,7 +6,7 @@
 
 __copyright__ = "2024 Volodymyr Shymanskyy"
 __license__ = "MIT"
-__version__ = "0.1"
+__version__ = "0.1.1"
 
 import time
 import random
@@ -18,8 +18,8 @@ from asyncio import sleep_ms
 # log = logging.getLogger(__name__)
 
 # Define DNS servers to query (Google, Cloudflare, Quad9)
-servers = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
-timeout = 5000
+_servers = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
+_timeout = 5000
 
 _cache = OrderedDict()
 _cache_size = 32
@@ -84,9 +84,21 @@ def _parse_dns_response(response):
     return answers
 
 
+def set_servers(s):
+    _servers = list(set(s))  # accept unique addresses
+
+
 def add_server(addr):
-    if addr not in servers:
-        servers.insert(0, addr)
+    if addr not in _servers:
+        _servers.insert(0, addr)
+
+
+def set_timeout_ms(ms):
+    _timeout = ms
+
+
+def clear_cache():
+    _cache.clear()
 
 
 # Asynchronous getaddrinfo compatible function
@@ -106,7 +118,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
 
     try:
         query_ids = []
-        tout = timeout
+        tout = _timeout
         results = []
         finished = total = 0
         t = time.ticks_ms()
@@ -117,7 +129,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         for qtype in _qtypes[family]:
             query = _build_dns_query(hostname, qtype)
             query_ids.append(query[0:2])
-            for dns in servers:
+            for dns in _servers:
                 s.sendto(query, (dns, 53))
                 total += 1
                 await sleep_ms(1)
