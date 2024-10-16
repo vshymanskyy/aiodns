@@ -51,11 +51,15 @@ def _build_dns_query(hostname, qtype):
     return query
 
 
+def _parse_int(b):
+    return int.from_bytes(b, 'big')
+
+
 def _parse_dns_response(response):
     if len(response) < 12:
         raise ValueError("Invalid DNS response")
 
-    answer_count = int.from_bytes(response[6:8])
+    answer_count = _parse_int(response[6:8])
     if not answer_count:
         raise ValueError("Invalid DNS response")
 
@@ -66,18 +70,18 @@ def _parse_dns_response(response):
         pos = response.find(b"\xc0", pos)
         if pos < 0:
             raise ValueError("Invalid DNS response")
-        answer_type = int.from_bytes(response[pos + 2 : pos + 4])
+        answer_type = _parse_int(response[pos + 2 : pos + 4])
         if response[pos + 4 : pos + 6] != b"\x00\x01":  # QCLASS (IN)
             raise ValueError("Invalid DNS response")
-        # TODO: ttl = int.from_bytes(response[pos + 6 : pos + 10])
-        data_length = int.from_bytes(response[pos + 10 : pos + 12])
+        # TODO: ttl = _parse_int(response[pos + 6 : pos + 10])
+        data_length = _parse_int(response[pos + 10 : pos + 12])
         pos += 12
         if answer_type == 1 and data_length == 4:  # IPv4 (A record)
             ip = response[pos : pos + 4]
             answers.append((AF_INET, ".".join(str(b) for b in ip)))
         elif answer_type == 28 and data_length == 16:  # IPv6 (AAAA record)
             ip = response[pos : pos + 16]
-            answers.append((AF_INET6, ":".join(f"{int.from_bytes(ip[i:i+2]):x}" for i in range(0, 16, 2))))
+            answers.append((AF_INET6, ":".join(f"{_parse_int(ip[i:i+2]):x}" for i in range(0, 16, 2))))
         # else:
         #    log.warning("Unknown answer %d (len:%d)", answer_type, data_length)
         pos += data_length
