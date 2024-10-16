@@ -134,8 +134,14 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
             query = _build_dns_query(hostname, qtype)
             query_ids.append(query[0:2])
             for dns in _servers:
-                s.sendto(query, (dns, 53))
-                total += 1
+                for retry in range(10):
+                    try:
+                        if s.sendto(query, (dns, 53)) == len(query):
+                            total += 1
+                            break
+                    except Exception:
+                        pass
+                    await sleep_ms(10)
                 await sleep_ms(1)
 
         while (dt := time.ticks_diff(time.ticks_ms(), t)) < tout and finished < total:
