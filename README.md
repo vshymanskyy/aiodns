@@ -41,9 +41,9 @@ See [usage examples](./examples)
 ## API
 
 ```py
-aiodns.servers = set("8.8.8.8", "1.1.1.1")
+aiodns.servers = set(["8.8.8.8", "1.1.1.1"])
 aiodns.servers.add("9.9.9.9")
 aiodns.timeout_ms = 5000
 aiodns.cache.clear()
-await  aiodns.getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0)
+await aiodns.getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0)
 ```
