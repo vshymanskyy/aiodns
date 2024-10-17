@@ -152,7 +152,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
                 # log.debug("%s responded with %s (%d ms)", addr[0], answers, dt)
                 results.extend(x for x in answers if x not in results)
                 # Give 50 ms for additional responses to arrive
-                tout = time.ticks_add(dt, 50)
+                tout = dt + 50
             except Exception:
                 await sleep_ms(5)
         if not results:
