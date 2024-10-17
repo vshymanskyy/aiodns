@@ -26,8 +26,8 @@ except ImportError:
 servers = set(["8.8.8.8", "1.1.1.1", "9.9.9.9"])  # Google, Cloudflare, Quad9
 timeout_ms = 5000
 
-_cache = OrderedDict()
-_cache_size = 32
+cache = OrderedDict()
+cache_size = 32
 _qtypes = {
     AF_INET: (b"\x00\x01",),  # A
     AF_INET6: (b"\x00\x1c",),  # AAAA
@@ -93,8 +93,8 @@ def _parse_dns_response(response):
     return answers
 
 
-def clear_cache():
-    _cache.clear()
+def clearcache():
+    cache.clear()
 
 
 def _dns_addr(x):
@@ -108,11 +108,11 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         type = SOCK_STREAM
 
     cache_key = (hostname, family)
-    if cache_key in _cache:
+    if cache_key in cache:
         # TODO: check TTL
         # Mark as most recently used
-        results = _cache.pop(cache_key)
-        _cache[cache_key] = results
+        results = cache.pop(cache_key)
+        cache[cache_key] = results
         # log.debug("%s found in cache", hostname)
         res = []
         for fam, addr in results:
@@ -166,10 +166,10 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         if not results:
             raise OSError(f"Failed to resolve {hostname}")
 
-        _cache[cache_key] = results
-        while len(_cache) > _cache_size:
+        cache[cache_key] = results
+        while len(cache) > cache_size:
             # Remove least recently used item
-            _cache.pop(next(iter(_cache)))
+            cache.pop(next(iter(cache)))
 
         res = []
         for fam, addr in results:
