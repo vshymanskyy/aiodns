@@ -1,4 +1,3 @@
-import network
 import asyncio
 import socket
 import aiodns
@@ -8,6 +7,9 @@ WIFI_SSID = ""
 WIFI_PASS = ""
 
 async def connect_sta():
+    import network
+    if not WIFI_SSID:
+        raise ValueError("WIFI_SSID and WIFI_PASS not configured")
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print("Connecting to WiFi...")
@@ -25,13 +27,10 @@ async def test_connection(hostname, family):
         sock.connect(addr[0][-1])
         sock.close()
         print("Connection OK")
-    except Exception:
-        print("Connection Failed")
+    except Exception as e:
+        print("Connection Failed.", e)
 
 async def run_example(hostname):
-    if not WIFI_SSID:
-        print("WIFI_SSID and WIFI_PASS not configured")
-        return
     await connect_sta()
     print("=== IPv4 ===")
     await test_connection(hostname, AF_INET)

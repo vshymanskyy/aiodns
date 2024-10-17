@@ -10,10 +10,15 @@ __version__ = "0.1.1"
 
 import time
 import os
-import network
 from socket import socket, AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM
+from socket import getaddrinfo as _gai
 from collections import OrderedDict
 from asyncio import sleep_ms
+
+try:
+    import network
+except ImportError:
+    network = None
 
 # import logging
 # log = logging.getLogger(__name__)
@@ -105,7 +110,10 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         results = _cache.pop(cache_key)
         _cache[cache_key] = results
         # log.debug("%s found in cache", hostname)
-        return [(fam, type, proto, "", (addr, port)) for fam, addr in results]
+        res = []
+        for fam, addr in results:
+            res.extend(_gai(addr, port, fam, type, proto, flags))
+        return res
 
     try:
         query_ids = []
@@ -114,7 +122,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         finished = total = 0
         t = time.ticks_ms()
 
-        sysdns = network.ipconfig("dns")
+        sysdns = network.ipconfig("dns") if network else "0.0.0.0"
         if sysdns != "0.0.0.0":
             srv = servers.copy()
             srv.add(sysdns)
@@ -123,6 +131,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         else:
             srv = ("8.8.8.8", "1.1.1.1", "9.9.9.9")  # Google, Cloudflare, Quad9
 
+        srv = [_gai(addr, 53, 0, SOCK_DGRAM)[0][-1] for addr in srv]
         # Send the query to all DNS servers in parallel
         s = socket(AF_INET, SOCK_DGRAM)
         s.setblocking(False)
@@ -132,7 +141,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
             for dns in srv:
                 for retry in range(10):
                     try:
-                        if s.sendto(query, (dns, 53)) == len(query):
+                        if s.sendto(query, dns) == len(query):
                             total += 1
                             break
                     except Exception:
@@ -146,7 +155,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
                 finished += 1
                 if rsp[0:2] not in query_ids:  # Verify Transaction ID
                     continue
-                if addr[0] not in srv or addr[1] != 53:
+                if addr not in srv:
                     continue
                 answers = _parse_dns_response(rsp)
                 # log.debug("%s responded with %s (%d ms)", addr[0], answers, dt)
@@ -162,6 +171,10 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         while len(_cache) > _cache_size:
             # Remove least recently used item
             _cache.pop(next(iter(_cache)))
-        return [(fam, type, proto, "", (addr, port)) for fam, addr in results]
+
+        res = []
+        for fam, addr in results:
+            res.extend(_gai(addr, port, fam, type, proto, flags))
+        return res
     finally:
         s.close()
