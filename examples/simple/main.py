@@ -15,8 +15,6 @@ async def connect_sta():
         sta_if.connect(WIFI_SSID, WIFI_PASS)
         while not sta_if.isconnected():
             await asyncio.sleep_ms(10)
-    # Add local DNS to aiodns
-    aiodns.add_server(sta_if.ifconfig()[3])
 
 async def test_connection(hostname, family):
     try:

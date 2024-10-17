@@ -10,6 +10,7 @@ __version__ = "0.1.1"
 
 import time
 import os
+import network
 from socket import socket, AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM
 from collections import OrderedDict
 from asyncio import sleep_ms
@@ -17,9 +18,8 @@ from asyncio import sleep_ms
 # import logging
 # log = logging.getLogger(__name__)
 
-# Define DNS servers to query (Google, Cloudflare, Quad9)
-_servers = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
-_timeout = 5000
+servers = set()
+timeout_ms = 5000
 
 _cache = OrderedDict()
 _cache_size = 32
@@ -88,19 +88,6 @@ def _parse_dns_response(response):
     return answers
 
 
-def set_servers(s):
-    _servers = list(set(s))  # accept unique addresses
-
-
-def add_server(addr):
-    if addr not in _servers:
-        _servers.insert(0, addr)
-
-
-def set_timeout_ms(ms):
-    _timeout = ms
-
-
 def clear_cache():
     _cache.clear()
 
@@ -122,10 +109,19 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
 
     try:
         query_ids = []
-        tout = _timeout
+        tout = timeout_ms
         results = []
         finished = total = 0
         t = time.ticks_ms()
+
+        sysdns = network.ipconfig("dns")
+        if sysdns != "0.0.0.0":
+            srv = servers.copy()
+            srv.add(sysdns)
+        elif servers:
+            srv = servers.copy()
+        else:
+            srv = ("8.8.8.8", "1.1.1.1", "9.9.9.9")  # Google, Cloudflare, Quad9
 
         # Send the query to all DNS servers in parallel
         s = socket(AF_INET, SOCK_DGRAM)
@@ -133,7 +129,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         for qtype in _qtypes[family]:
             query = _build_dns_query(hostname, qtype)
             query_ids.append(query[0:2])
-            for dns in _servers:
+            for dns in srv:
                 for retry in range(10):
                     try:
                         if s.sendto(query, (dns, 53)) == len(query):
@@ -146,11 +142,12 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
 
         while (dt := time.ticks_diff(time.ticks_ms(), t)) < tout and finished < total:
             try:
-                rsp, addr = s.recvfrom(512)
+                rsp, addr = s.recvfrom(256)
                 finished += 1
                 if rsp[0:2] not in query_ids:  # Verify Transaction ID
                     continue
-                # TODO: check if the response comes from the server we contacted
+                if addr[0] not in srv or addr[1] != 53:
+                    continue
                 answers = _parse_dns_response(rsp)
                 # log.debug("%s responded with %s (%d ms)", addr[0], answers, dt)
                 results.extend(x for x in answers if x not in results)
