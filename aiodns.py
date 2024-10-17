@@ -23,7 +23,7 @@ except ImportError:
 # import logging
 # log = logging.getLogger(__name__)
 
-servers = set()
+servers = set(["8.8.8.8", "1.1.1.1", "9.9.9.9"])  # Google, Cloudflare, Quad9
 timeout_ms = 5000
 
 _cache = OrderedDict()
@@ -57,7 +57,7 @@ def _build_dns_query(hostname, qtype):
 
 
 def _parse_int(b):
-    return int.from_bytes(b, 'big')
+    return int.from_bytes(b, "big")
 
 
 def _parse_dns_response(response):
@@ -97,6 +97,10 @@ def clear_cache():
     _cache.clear()
 
 
+def _dns_addr(x):
+    return _gai(x, 53, 0, SOCK_DGRAM)[0][-1]
+
+
 # Asynchronous getaddrinfo compatible function
 async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
     hostname = hostname.lower()  # Domains are case-insensitive
@@ -122,16 +126,11 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
         finished = total = 0
         t = time.ticks_ms()
 
+        srv = [_dns_addr(s) for s in servers]
         sysdns = network.ipconfig("dns") if network else "0.0.0.0"
         if sysdns != "0.0.0.0":
-            srv = servers.copy()
-            srv.add(sysdns)
-        elif servers:
-            srv = servers.copy()
-        else:
-            srv = ("8.8.8.8", "1.1.1.1", "9.9.9.9")  # Google, Cloudflare, Quad9
+            srv.insert(0, _dns_addr(sysdns))
 
-        srv = [_gai(addr, 53, 0, SOCK_DGRAM)[0][-1] for addr in srv]
         # Send the query to all DNS servers in parallel
         s = socket(AF_INET, SOCK_DGRAM)
         s.setblocking(False)
