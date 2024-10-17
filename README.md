@@ -36,12 +36,7 @@ mip.install("github:vshymanskyy/aiodns")
 
 ## Example
 
-```py
-import aiodns
-# Connect your board to any network
-info = await aiodns.getaddrinfo("google.com", 443)
-print(info)
-```
+See [usage examples](./examples)
 
 ## API
 
