@@ -3,7 +3,7 @@
   "author": "Volodymyr Shymanskyy",
   "keywords": "iot,wifi,dns",
   "urls": [
-    ["./main.py", "main.py"]
+    ["fs:main.py", "main.py"]
   ],
   "deps": [
     "github:vshymanskyy/aiodns"
