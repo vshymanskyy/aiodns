@@ -6,11 +6,12 @@
 
 __copyright__ = "2024 Volodymyr Shymanskyy"
 __license__ = "MIT"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 import time
 import os
-from socket import socket, AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM
+import socket
+from socket import AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM
 from socket import getaddrinfo as _gai
 from collections import OrderedDict
 from asyncio import sleep_ms
@@ -23,7 +24,7 @@ except ImportError:
 # import logging
 # log = logging.getLogger(__name__)
 
-servers = set(["8.8.8.8", "1.1.1.1", "9.9.9.9"])  # Google, Cloudflare, Quad9
+servers = {"8.8.8.8", "1.1.1.1", "9.9.9.9"}  # Google, Cloudflare, Quad9
 timeout_ms = 5000
 
 cache = OrderedDict()
@@ -93,10 +94,6 @@ def _parse_dns_response(response):
     return answers
 
 
-def clearcache():
-    cache.clear()
-
-
 def _dns_addr(x):
     return _gai(x, 53, 0, SOCK_DGRAM)[0][-1]
 
@@ -104,6 +101,7 @@ def _dns_addr(x):
 # Asynchronous getaddrinfo compatible function
 async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
     hostname = hostname.lower()  # Domains are case-insensitive
+    port = int(port)
     if not type:
         type = SOCK_STREAM
 
@@ -119,21 +117,26 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
             res.extend(_gai(addr, port, fam, type, proto, flags))
         return res
 
+    s = socket.socket(AF_INET, SOCK_DGRAM)
+    s.setblocking(False)
     try:
         query_ids = []
         tout = timeout_ms
         results = []
         finished = total = 0
         t = time.ticks_ms()
+        loc = hostname.endswith(".local")
 
-        srv = [_dns_addr(s) for s in servers]
-        sysdns = network.ipconfig("dns") if network else "0.0.0.0"
-        if sysdns != "0.0.0.0":
-            srv.insert(0, _dns_addr(sysdns))
+        if loc:
+            srv = [_gai("224.0.0.251", 5353, 0, SOCK_DGRAM)[0][-1]]
+        else:
+            srv = [_dns_addr(x) for x in servers]
+            if hasattr(network, "ipconfig"):
+                sysdns = network.ipconfig("dns")
+                if sysdns and sysdns != "0.0.0.0":
+                    srv.append(_dns_addr(sysdns))
 
         # Send the query to all DNS servers in parallel
-        s = socket(AF_INET, SOCK_DGRAM)
-        s.setblocking(False)
         for qtype in _qtypes[family]:
             query = _build_dns_query(hostname, qtype)
             query_ids.append(query[0:2])
@@ -154,7 +157,7 @@ async def getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0):
                 finished += 1
                 if rsp[0:2] not in query_ids:  # Verify Transaction ID
                     continue
-                if addr not in srv:
+                if addr not in srv and not loc:
                     continue
                 answers = _parse_dns_response(rsp)
                 # log.debug("%s responded with %s (%d ms)", addr[0], answers, dt)

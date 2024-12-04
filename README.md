@@ -13,6 +13,7 @@ A small async DNS client for MicroPython
 - Works on `ESP32`, `ESP8266`, `Raspberry Pi Pico W`, `WM W600` and other boards
 - Versatile, runs multiple queries at a time using multiple DNS servers
 - Supports IPv4 and IPv6
+- Supports `mDNS` (Multicast DNS) name resolution
 - Works with WiFi, Ethernet, Cellular, and in multi-network scenarios
 - Caches up to 32 hostnames (configurable)
 - API-compatible with `getaddrinfo`
@@ -47,4 +48,19 @@ aiodns.timeout_ms = 5000
 aiodns.cache.clear()
 aiodns.cache_size = 32
 await aiodns.getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0)
+```
+
+## Extra
+
+Minify to `~2'500` bytes:
+
+```sh
+pip3 install -U python-minifier
+pyminify aiodns.py -o aiodns_min.py --rename-globals --preserve-globals=getaddrinfo,servers,cache,cache_size,timeout_ms,AF_INET,AF_INET6,SOCK_DGRAM,SOCK_STREAM
+```
+
+Compile to `.mpy` `~2'000` bytes
+
+```sh
+mpy-cross aiodns.py -O3 -o aiodns.mpy
 ```
