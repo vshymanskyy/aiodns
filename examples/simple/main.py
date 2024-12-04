@@ -1,13 +1,14 @@
 import asyncio
 import socket
 import aiodns
-from aiodns import AF_INET, AF_INET6
 
 WIFI_SSID = ""
 WIFI_PASS = ""
 
 async def connect_sta():
     import network
+    if not hasattr(network, "WLAN"):
+        return
     if not WIFI_SSID:
         raise ValueError("WIFI_SSID and WIFI_PASS not configured")
     sta_if = network.WLAN(network.STA_IF)
@@ -21,7 +22,8 @@ async def connect_sta():
 async def test_connection(hostname, family):
     try:
         addr = await aiodns.getaddrinfo(hostname, 80, family)
-        print("Address info:", addr)
+        for a in addr:
+            print(a)
         sock = socket.socket(family, socket.SOCK_STREAM)
         print("Connecting...")
         sock.connect(addr[0][-1])
@@ -33,9 +35,9 @@ async def test_connection(hostname, family):
 async def run_example(hostname):
     await connect_sta()
     print("=== IPv4 ===")
-    await test_connection(hostname, AF_INET)
+    await test_connection(hostname, aiodns.AF_INET)
     print("=== IPv6 ===")
-    await test_connection(hostname, AF_INET6)
+    await test_connection(hostname, aiodns.AF_INET6)
 
 if __name__ == "__main__":
     asyncio.run(run_example("google.com"))
