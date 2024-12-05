@@ -154,11 +154,11 @@ async def getaddrinfo(host, port, family=AF_INET, type=0, proto=0, flags=0):
         while (dt := time.ticks_diff(time.ticks_ms(), t)) < tout and finished < total:
             try:
                 rsp, addr = s.recvfrom(256)
-                finished += 1
                 if rsp[0:2] not in query_ids:  # Verify Transaction ID
                     continue
                 if addr not in srv and not loc:
                     continue
+                finished += 1
                 answers = _parse_dns_rsp(rsp)
                 # log.debug("%s responded with %s (%d ms)", addr[0], answers, dt)
                 results.extend(x for x in answers if x not in results)
