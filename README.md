@@ -52,15 +52,22 @@ await aiodns.getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=
 
 ## Extra
 
-Minify to `~2'500` bytes:
+Minify to ~`2'800` bytes:
 
 ```sh
 pip3 install -U python-minifier
-pyminify aiodns.py -o aiodns_min.py --rename-globals --preserve-globals=getaddrinfo,servers,cache,cache_size,timeout_ms,AF_INET,AF_INET6,SOCK_DGRAM,SOCK_STREAM
+pyminify aiodns.py -o aiodns_min.py --rename-globals --preserve-globals=getaddrinfo,servers,cache,cache_size,timeout_ms,AF_INET,AF_INET6,AF_UNSPEC,SOCK_DGRAM,SOCK_STREAM
 ```
 
-Compile to `.mpy` `~2'000` bytes
+Compile to MPY ~`2'200` bytes:
 
 ```sh
 mpy-cross aiodns.py -O3 -o aiodns.mpy
+```
+
+Run example using MicroPython Unix port:
+
+```sh
+export MICROPYPATH=".frozen:."
+micropython examples/simple/main.py
 ```

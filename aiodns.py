@@ -24,6 +24,8 @@ except ImportError:
 # import logging
 # log = logging.getLogger(__name__)
 
+AF_UNSPEC = 0
+
 servers = {"8.8.8.8", "1.1.1.1", "9.9.9.9"}  # Google, Cloudflare, Quad9
 timeout_ms = 5000
 
@@ -32,9 +34,32 @@ cache_size = 32
 _qtypes = {
     AF_INET: (b"\x00\x01",),  # A
     AF_INET6: (b"\x00\x1c",),  # AAAA
-    0: (b"\x00\x01", b"\x00\x1c"),
+    AF_UNSPEC: (b"\x00\x01", b"\x00\x1c"),
 }
 
+def _ip4(s):
+    try:
+        parts = s.split(".")
+        if len(parts) != 4:
+            return False
+        for p in parts:
+            if not 0 <= int(p) <= 255:
+                return False
+        return True
+    except ValueError:
+        return False
+
+def _ip6(s):
+    try:
+        parts = s.split(":")
+        if len(parts) > 8 or len(parts) < 3:
+            return False
+        for p in parts:
+            if p and int(p, 16) > 0xFFFF:
+                return False
+        return True
+    except ValueError:
+        return False
 
 def _build_dns_query(host, qtype):
     host = host.encode()
@@ -104,6 +129,11 @@ async def getaddrinfo(host, port, family=AF_INET, type=0, proto=0, flags=0):
     port = int(port)
     if not type:
         type = SOCK_STREAM
+
+    # TODO: use AI_NUMERICHOST
+    # See https://github.com/vshymanskyy/aiodns/issues/9
+    if _ip4(host) or _ip6(host):
+        return _gai(host, port, family, type, proto, flags)
 
     cache_key = (host, family)
     if cache_key in cache:
