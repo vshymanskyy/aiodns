@@ -19,7 +19,8 @@ jobs:
       with:
         python-version: '3.x'
     - name: Set up MicroPython
-      uses: BrianPugh/install-micropython@v2
+      run: |
+        sudo apt install micropython
     - name: Install dependencies
       run: |
         pip3 install -U python-minifier mpy-cross microemu
