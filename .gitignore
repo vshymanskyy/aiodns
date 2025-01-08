@@ -1,0 +1,4 @@
+**/__pycache__/
+lib/
+extra/aiodns.mpy
+extra/aiodns.min.py

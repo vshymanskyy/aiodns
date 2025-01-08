@@ -9,7 +9,8 @@ async def connect_sta():
     if not hasattr(network, "WLAN"):
         return
     if not WIFI_SSID:
-        raise ValueError("WIFI_SSID and WIFI_PASS not configured")
+        print("WIFI_SSID and WIFI_PASS not configured")
+        return
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print("Connecting to WiFi...")
@@ -37,7 +38,10 @@ async def test(hostname):
     #await resolve(hostname, aiodns.AF_UNSPEC)
 
 async def main():
-    await connect_sta()
+    try:
+        await connect_sta()
+    except:
+        pass
     await test("google.com")                        # Regular DNS
     #await test("mdns-test.local")                  # Multicast DNS (mDNS)
     await test("127.0.0.1")                         # Numeric IPv4

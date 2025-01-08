@@ -50,24 +50,32 @@ aiodns.cache_size = 32
 await aiodns.getaddrinfo(hostname, port, family=AF_INET, type=0, proto=0, flags=0)
 ```
 
-## Extra
-
-Minify to ~`2'800` bytes:
+## Build
 
 ```sh
-pip3 install -U python-minifier
-pyminify aiodns.py -o aiodns_min.py --rename-globals --preserve-globals=getaddrinfo,servers,cache,cache_size,timeout_ms,AF_INET,AF_INET6,AF_UNSPEC,SOCK_DGRAM,SOCK_STREAM
+pip3 install -U python-minifier mpy-cross
+python3 ./extra/build.py
 ```
 
-Compile to MPY ~`2'200` bytes:
+Output:
 
-```sh
-mpy-cross aiodns.py -O3 -o aiodns.mpy
+```log
+Minified: 2796 bytes
+Compiled: 2202 bytes
 ```
 
-Run example using MicroPython Unix port:
+## Run using MicroPython Unix port:
 
 ```sh
-export MICROPYPATH=".frozen:."
+export MICROPYPATH=".frozen:./lib:."
+mkdir -p lib
+micropython -m mip install logging
 micropython examples/simple/main.py
+```
+
+## Run using Python 3:
+
+```sh
+pip3 install -U microemu
+microemu examples/simple/main.py
 ```
