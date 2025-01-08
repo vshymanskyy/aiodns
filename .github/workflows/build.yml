@@ -1,0 +1,35 @@
+name: build
+
+on:
+  push:
+    paths-ignore: ['**.md', '**.svg', '**.png']
+  pull_request:
+    paths-ignore: ['**.md', '**.svg', '**.png']
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Set up MicroPython
+      uses: BrianPugh/install-micropython@v2
+    - name: Install dependencies
+      run: |
+        pip3 install -U python-minifier mpy-cross microemu
+    - name: Build
+      run: |
+        python3 ./extra/build.py
+    - name: Test (Python 3)
+      run: |
+        microemu examples/simple/main.py
+    - name: Test (MicroPython)
+      run: |
+        export MICROPYPATH=".frozen:./lib:."
+        micropython examples/simple/main.py
