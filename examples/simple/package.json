@@ -2,6 +2,7 @@
   "name": "Simple aiodns example",
   "author": "Volodymyr Shymanskyy",
   "keywords": "iot,wifi,dns",
+  "readme": "github:vshymanskyy/aiodns/README.md",
   "urls": [
     ["fs:main.py", "main.py"]
   ],
